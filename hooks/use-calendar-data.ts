@@ -11,8 +11,13 @@ import {
   subscribeEventChanges,
   updateEvent,
   deleteEvent,
+  addBoardMemo,
+  subscribeBoardMemoChanges,
+  updateBoardMemo,
+  deleteBoardMemo,
   type FamilyMember,
   type CalendarEvent,
+  type BoardMemo,
 } from "@/lib/firebase"
 import {
   localAddMember,
@@ -23,6 +28,10 @@ import {
   localSubscribeEventChanges,
   localUpdateEvent,
   localDeleteEvent,
+  localAddBoardMemo,
+  localSubscribeBoardMemoChanges,
+  localUpdateBoardMemo,
+  localDeleteBoardMemo,
 } from "@/lib/local-store"
 
 const useFirebase = isFirebaseConfigured()
@@ -113,4 +122,48 @@ export function useEvents() {
   }, [])
 
   return { events, loading, add, update, remove }
+}
+
+export function useBoardMemos() {
+  const [memos, setMemos] = useState<BoardMemo[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let unsub: (() => void) | undefined
+    if (useFirebase) {
+      unsub = subscribeBoardMemoChanges((data) => {
+        setMemos(data)
+        setLoading(false)
+      })
+    } else {
+      unsub = localSubscribeBoardMemoChanges((data) => {
+        setMemos(data)
+        setLoading(false)
+      })
+    }
+    return () => unsub?.()
+  }, [])
+
+  const add = useCallback(async (memo: Pick<BoardMemo, "content" | "memberId">) => {
+    if (useFirebase) {
+      return addBoardMemo(memo)
+    }
+    return localAddBoardMemo(memo)
+  }, [])
+
+  const update = useCallback(async (id: string, data: Pick<BoardMemo, "content">) => {
+    if (useFirebase) {
+      return updateBoardMemo(id, data)
+    }
+    localUpdateBoardMemo(id, data)
+  }, [])
+
+  const remove = useCallback(async (id: string) => {
+    if (useFirebase) {
+      return deleteBoardMemo(id)
+    }
+    localDeleteBoardMemo(id)
+  }, [])
+
+  return { memos, loading, add, update, remove }
 }

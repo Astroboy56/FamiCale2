@@ -43,12 +43,32 @@ export type CalendarEvent = {
   reminderMinutes: number
 }
 
+/** 共有ボードのメモ（家族間で共有） */
+export type BoardMemo = {
+  id: string
+  content: string
+  memberId: string
+  createdAt: string
+  updatedAt: string
+}
+
 // Check if Firebase is configured
 export function isFirebaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
   )
+}
+
+/** 環境変数の設定状況（値は返さず、設定済みかどうかのみ）。デバッグ用。 */
+export function getFirebaseConfigStatus(): {
+  apiKey: boolean
+  projectId: boolean
+} {
+  return {
+    apiKey: Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+    projectId: Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  }
 }
 
 // Family Members
@@ -107,4 +127,42 @@ export async function deleteEvent(id: string): Promise<void> {
   await deleteDoc(doc(db, "events", id))
 }
 
+// Shared Board (家族共有メモ)
+const BOARD_COLLECTION = "boardMemos"
+
+export async function addBoardMemo(memo: Pick<BoardMemo, "content" | "memberId">): Promise<string> {
+  const now = new Date().toISOString()
+  const docRef = await addDoc(collection(db, BOARD_COLLECTION), { ...memo, createdAt: now, updatedAt: now })
+  return docRef.id
+}
+
+export async function getBoardMemos(): Promise<BoardMemo[]> {
+  const q = query(
+    collection(db, BOARD_COLLECTION),
+    orderBy("updatedAt", "desc")
+  )
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as BoardMemo)
+}
+
+export function subscribeBoardMemoChanges(callback: (memos: BoardMemo[]) => void): Unsubscribe {
+  const q = query(
+    collection(db, BOARD_COLLECTION),
+    orderBy("updatedAt", "desc")
+  )
+  return onSnapshot(q, (snapshot) => {
+    const memos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as BoardMemo)
+    callback(memos)
+  })
+}
+
+export async function updateBoardMemo(id: string, data: Partial<Omit<BoardMemo, "id" | "createdAt" | "memberId">>): Promise<void> {
+  await updateDoc(doc(db, BOARD_COLLECTION, id), { ...data, updatedAt: new Date().toISOString() })
+}
+
+export async function deleteBoardMemo(id: string): Promise<void> {
+  await deleteDoc(doc(db, BOARD_COLLECTION, id))
+}
+
 export { db }
+

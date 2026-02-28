@@ -18,9 +18,10 @@ import { UpcomingPanel } from "@/components/calendar/sidebar-panel"
 import { BottomNav, type TabId } from "@/components/calendar/bottom-nav"
 import { DayDetailSheet } from "@/components/calendar/day-detail-sheet"
 import { MembersTab } from "@/components/calendar/members-tab"
-import { useMembers, useEvents } from "@/hooks/use-calendar-data"
+import { BoardTab } from "@/components/calendar/board-tab"
+import { useMembers, useEvents, useBoardMemos } from "@/hooks/use-calendar-data"
 import { useReminders } from "@/hooks/use-reminders"
-import { isFirebaseConfigured } from "@/lib/firebase"
+import { isFirebaseConfigured, getFirebaseConfigStatus } from "@/lib/firebase"
 import type { CalendarEvent } from "@/lib/firebase"
 
 type ViewMode = "month" | "week"
@@ -37,6 +38,7 @@ export default function CalendarPage() {
 
   const { members, add: addMember, update: updateMember, remove: removeMember } = useMembers()
   const { events, add: addEvent, update: updateEvent, remove: removeEvent } = useEvents()
+  const { memos: boardMemos, add: addBoardMemo, update: updateBoardMemo, remove: removeBoardMemo } = useBoardMemos()
 
   useReminders(events, members)
 
@@ -127,15 +129,43 @@ export default function CalendarPage() {
     [removeMember, members]
   )
 
+  const handleAddBoardMemo = useCallback(
+    async (data: { content: string; memberId: string }) => {
+      await addBoardMemo(data)
+      toast.success("メモを投稿しました")
+    },
+    [addBoardMemo]
+  )
+
+  const handleUpdateBoardMemo = useCallback(
+    async (id: string, data: { content: string }) => {
+      await updateBoardMemo(id, data)
+      toast.success("メモを更新しました")
+    },
+    [updateBoardMemo]
+  )
+
+  const handleDeleteBoardMemo = useCallback(
+    async (id: string) => {
+      await removeBoardMemo(id)
+      toast.success("メモを削除しました")
+    },
+    [removeBoardMemo]
+  )
+
   const isDemo = !isFirebaseConfigured()
+  const configStatus = getFirebaseConfigStatus()
 
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       {/* Demo banner */}
       {isDemo && (
-        <div className="flex items-center justify-center bg-accent/60 px-4 py-1.5 safe-top">
+        <div className="flex flex-col items-center justify-center gap-0.5 bg-accent/60 px-4 py-2 safe-top">
           <span className="text-[11px] font-medium text-accent-foreground">
             デモモード - Firebase環境変数を設定するとリアルタイム同期が有効になります
+          </span>
+          <span className="text-[10px] text-accent-foreground/80">
+            API_KEY: {configStatus.apiKey ? "設定済み" : "未設定"} / PROJECT_ID: {configStatus.projectId ? "設定済み" : "未設定"}
           </span>
         </div>
       )}
@@ -184,6 +214,22 @@ export default function CalendarPage() {
             events={events}
             members={members}
             onEventClick={handleEventClick}
+          />
+        </>
+      )}
+
+      {/* Shared Board Tab */}
+      {activeTab === "board" && (
+        <>
+          <header className="flex items-center bg-card px-4 py-3 border-b border-border safe-top">
+            <h1 className="text-lg font-bold text-foreground">共有ボード</h1>
+          </header>
+          <BoardTab
+            memos={boardMemos}
+            members={members}
+            onAdd={handleAddBoardMemo}
+            onUpdate={handleUpdateBoardMemo}
+            onDelete={handleDeleteBoardMemo}
           />
         </>
       )}

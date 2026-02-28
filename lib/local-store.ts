@@ -1,7 +1,7 @@
 // In-memory store for demo mode (when Firebase is not configured)
 // This allows the app to work without Firebase for testing/demo purposes
 
-import type { FamilyMember, CalendarEvent } from "./firebase"
+import type { FamilyMember, CalendarEvent, BoardMemo } from "./firebase"
 
 let members: FamilyMember[] = [
   { id: "m1", name: "パパ", color: "#3B82F6" },
@@ -59,8 +59,11 @@ let events: CalendarEvent[] = [
 
 let nextMemberId = 5
 let nextEventId = 5
+let nextBoardMemoId = 1
+let boardMemos: BoardMemo[] = []
 let memberListeners: ((members: FamilyMember[]) => void)[] = []
 let eventListeners: ((events: CalendarEvent[]) => void)[] = []
+let boardMemoListeners: ((memos: BoardMemo[]) => void)[] = []
 
 function notifyMemberListeners() {
   memberListeners.forEach((cb) => cb([...members]))
@@ -68,6 +71,10 @@ function notifyMemberListeners() {
 
 function notifyEventListeners() {
   eventListeners.forEach((cb) => cb([...events]))
+}
+
+function notifyBoardMemoListeners() {
+  boardMemoListeners.forEach((cb) => cb([...boardMemos]))
 }
 
 // Members
@@ -130,4 +137,39 @@ export function localUpdateEvent(id: string, data: Partial<Omit<CalendarEvent, "
 export function localDeleteEvent(id: string): void {
   events = events.filter((e) => e.id !== id)
   notifyEventListeners()
+}
+
+// Shared Board
+export function localAddBoardMemo(memo: Pick<BoardMemo, "content" | "memberId">): string {
+  const id = `b${nextBoardMemoId++}`
+  const now = new Date().toISOString()
+  boardMemos = [{ ...memo, id, createdAt: now, updatedAt: now }, ...boardMemos]
+  notifyBoardMemoListeners()
+  return id
+}
+
+export function localGetBoardMemos(): BoardMemo[] {
+  return [...boardMemos].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+}
+
+export function localSubscribeBoardMemoChanges(callback: (memos: BoardMemo[]) => void): () => void {
+  boardMemoListeners.push(callback)
+  callback(localGetBoardMemos())
+  return () => {
+    boardMemoListeners = boardMemoListeners.filter((cb) => cb !== callback)
+  }
+}
+
+export function localUpdateBoardMemo(id: string, data: Partial<Pick<BoardMemo, "content">>): void {
+  const now = new Date().toISOString()
+  boardMemos = boardMemos.map((m) =>
+    m.id === id ? { ...m, ...data, updatedAt: now } : m
+  )
+  boardMemos.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  notifyBoardMemoListeners()
+}
+
+export function localDeleteBoardMemo(id: string): void {
+  boardMemos = boardMemos.filter((m) => m.id !== id)
+  notifyBoardMemoListeners()
 }

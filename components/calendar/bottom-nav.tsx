@@ -1,8 +1,8 @@
 "use client"
 
-import { Calendar, ListTodo, Users, Plus } from "lucide-react"
+import { Calendar, ListTodo, Users, Plus, LayoutDashboard } from "lucide-react"
 
-export type TabId = "calendar" | "upcoming" | "members"
+export type TabId = "calendar" | "upcoming" | "members" | "board"
 
 interface BottomNavProps {
   activeTab: TabId
@@ -39,14 +39,17 @@ export function BottomNav({ activeTab, onTabChange, onAddEvent }: BottomNavProps
         </div>
 
         <TabButton
+          icon={<LayoutDashboard className="h-5 w-5" />}
+          label="共有ボード"
+          isActive={activeTab === "board"}
+          onClick={() => onTabChange("board")}
+        />
+        <TabButton
           icon={<Users className="h-5 w-5" />}
           label="メンバー"
           isActive={activeTab === "members"}
           onClick={() => onTabChange("members")}
         />
-
-        {/* Empty slot for balance */}
-        <div className="w-14" />
       </div>
     </nav>
   )
