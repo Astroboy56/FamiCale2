@@ -82,40 +82,60 @@ export default function CalendarPage() {
 
   const handleSaveEvent = useCallback(
     async (data: Omit<CalendarEvent, "id">) => {
-      await addEvent(data)
-      toast.success("予定を追加しました")
+      try {
+        await addEvent(data)
+        toast.success("予定を追加しました")
+      } catch (err) {
+        toast.error(`保存に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [addEvent]
   )
 
   const handleUpdateEvent = useCallback(
     async (id: string, data: Partial<Omit<CalendarEvent, "id">>) => {
-      await updateEvent(id, data)
-      toast.success("予定を更新しました")
+      try {
+        await updateEvent(id, data)
+        toast.success("予定を更新しました")
+      } catch (err) {
+        toast.error(`更新に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [updateEvent]
   )
 
   const handleDeleteEvent = useCallback(
     async (id: string) => {
-      await removeEvent(id)
-      toast.success("予定を削除しました")
+      try {
+        await removeEvent(id)
+        toast.success("予定を削除しました")
+      } catch (err) {
+        toast.error(`削除に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [removeEvent]
   )
 
   const handleAddMember = useCallback(
     async (data: { name: string; color: string }) => {
-      await addMember(data)
-      toast.success(`${data.name}を追加しました`)
+      try {
+        await addMember(data)
+        toast.success(`${data.name}を追加しました`)
+      } catch (err) {
+        toast.error(`追加に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [addMember]
   )
 
   const handleUpdateMember = useCallback(
     async (id: string, data: Partial<{ name: string; color: string }>) => {
-      await updateMember(id, data)
-      toast.success("メンバーを更新しました")
+      try {
+        await updateMember(id, data)
+        toast.success("メンバーを更新しました")
+      } catch (err) {
+        toast.error(`更新に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [updateMember]
   )
@@ -123,32 +143,48 @@ export default function CalendarPage() {
   const handleDeleteMember = useCallback(
     async (id: string) => {
       const member = members.find((m) => m.id === id)
-      await removeMember(id)
-      toast.success(`${member?.name || "メンバー"}を削除しました`)
+      try {
+        await removeMember(id)
+        toast.success(`${member?.name || "メンバー"}を削除しました`)
+      } catch (err) {
+        toast.error(`削除に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [removeMember, members]
   )
 
   const handleAddBoardMemo = useCallback(
     async (data: { content: string; memberId: string }) => {
-      await addBoardMemo(data)
-      toast.success("メモを投稿しました")
+      try {
+        await addBoardMemo(data)
+        toast.success("メモを投稿しました")
+      } catch (err) {
+        toast.error(`投稿に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [addBoardMemo]
   )
 
   const handleUpdateBoardMemo = useCallback(
     async (id: string, data: { content: string }) => {
-      await updateBoardMemo(id, data)
-      toast.success("メモを更新しました")
+      try {
+        await updateBoardMemo(id, data)
+        toast.success("メモを更新しました")
+      } catch (err) {
+        toast.error(`更新に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [updateBoardMemo]
   )
 
   const handleDeleteBoardMemo = useCallback(
     async (id: string) => {
-      await removeBoardMemo(id)
-      toast.success("メモを削除しました")
+      try {
+        await removeBoardMemo(id)
+        toast.success("メモを削除しました")
+      } catch (err) {
+        toast.error(`削除に失敗しました: ${err instanceof Error ? err.message : String(err)}`)
+      }
     },
     [removeBoardMemo]
   )

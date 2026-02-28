@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { initializeApp, getApps } from "firebase/app"
 import {
   getFirestore,
@@ -11,6 +12,8 @@ import {
   orderBy,
   onSnapshot,
   type Unsubscribe,
+  type QuerySnapshot,
+  type QueryDocumentSnapshot,
 } from "firebase/firestore"
 
 const firebaseConfig = {
@@ -80,13 +83,13 @@ export async function addMember(member: Omit<FamilyMember, "id">): Promise<strin
 export async function getMembers(): Promise<FamilyMember[]> {
   const q = query(collection(db, "members"), orderBy("name"))
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as FamilyMember)
+  return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as FamilyMember)
 }
 
 export function subscribeMemberChanges(callback: (members: FamilyMember[]) => void): Unsubscribe {
   const q = query(collection(db, "members"), orderBy("name"))
-  return onSnapshot(q, (snapshot) => {
-    const members = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as FamilyMember)
+  return onSnapshot(q, (snapshot: QuerySnapshot) => {
+    const members = snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as FamilyMember)
     callback(members)
   })
 }
@@ -108,13 +111,13 @@ export async function addEvent(event: Omit<CalendarEvent, "id">): Promise<string
 export async function getEvents(): Promise<CalendarEvent[]> {
   const q = query(collection(db, "events"), orderBy("date"))
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as CalendarEvent)
+  return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as CalendarEvent)
 }
 
 export function subscribeEventChanges(callback: (events: CalendarEvent[]) => void): Unsubscribe {
   const q = query(collection(db, "events"), orderBy("date"))
-  return onSnapshot(q, (snapshot) => {
-    const events = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as CalendarEvent)
+  return onSnapshot(q, (snapshot: QuerySnapshot) => {
+    const events = snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as CalendarEvent)
     callback(events)
   })
 }
@@ -142,7 +145,7 @@ export async function getBoardMemos(): Promise<BoardMemo[]> {
     orderBy("updatedAt", "desc")
   )
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as BoardMemo)
+  return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as BoardMemo)
 }
 
 export function subscribeBoardMemoChanges(callback: (memos: BoardMemo[]) => void): Unsubscribe {
@@ -150,8 +153,8 @@ export function subscribeBoardMemoChanges(callback: (memos: BoardMemo[]) => void
     collection(db, BOARD_COLLECTION),
     orderBy("updatedAt", "desc")
   )
-  return onSnapshot(q, (snapshot) => {
-    const memos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as BoardMemo)
+  return onSnapshot(q, (snapshot: QuerySnapshot) => {
+    const memos = snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }) as BoardMemo)
     callback(memos)
   })
 }
